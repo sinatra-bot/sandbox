@@ -72,7 +72,7 @@ if defined?(Gem)
     task :travis do
       load "ci/release.rb"
       sh <<-SH
-        echo -e "---\n:rubygems_api_key: #{ENV['RUBYGEMS_API_KEY']}" > ~/.gem/credentials
+        echo "---\n:rubygems_api_key: #{ENV['RUBYGEMS_API_KEY']}" > ~/.gem/credentials
         cat ~/.gem/credentials
         chmod 0600 ~/.gem/credentials
         sed -i "s/.*VERSION.*/  VERSION = '#{source_version}'/" lib/sandbox/version.rb
