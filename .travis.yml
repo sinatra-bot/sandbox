@@ -1,0 +1,20 @@
+---
+language: ruby
+
+dist: trusty
+sudo: false
+
+before_install:
+  - gem install bundler
+  - openssl aes-256-cbc -K $encrypted_5b48ddf2a81f_key -iv $encrypted_5b48ddf2a81f_iv -in sinatra-bot.enc -out ~/.ssh/id_rsa -d
+  - chmod 600 ~/.ssh/id_rsa
+  - echo -e "Host github.com\n\tStrictHostKeyChecking no\n\nIdentityFile ~/.ssh/id_rsa\n" >> ~/.ssh/config
+  - mkdir -p ~/.gem && touch ~/.gem/credentials
+  - git clone git@github.com:sinatra-bot/sandbox.git -b master
+  - git config --global user.name "Sinatra Bot"
+  - git config --global user.email "namusyaka+sinatra@gmail.com"
+
+rvm:
+  - 2.5.3
+
+script: './.travis.sh'
