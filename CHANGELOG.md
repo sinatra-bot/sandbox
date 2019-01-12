@@ -1,3 +1,7 @@
+# v0.0.4.rc / 2019-01-12
+
+* Support candidate release [#5](https://github.com/sinatra-bot/sandbox/pull/5) by [@namusyaka](https://github.com/namusyaka)
+
 # v0.0.3 / 2019-01-12
 
 * Cleanup comments [#4](https://github.com/sinatra-bot/sandbox/pull/4) by [@namusyaka](https://github.com/namusyaka)
