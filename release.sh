@@ -28,12 +28,10 @@ say "Makes sure the rubygems credentials exists in correct place.."
 mkdir -p ~/.gem && touch ~/.gem/credentials
 say "done."
 
-# Clone a target repository.
 say "Clones a tartget repository.."
 git clone git@github.com:$owner/$repository.git -b master
 say "done."
 
-# Auto release tasks
 cd $repository
 bundle install
 say "Generates new entry in CHANGELOG.md and Bumps version to new.."
