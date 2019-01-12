@@ -88,10 +88,33 @@ module Release
     end
     alias pr_no_from pull_request_number_from_commit_message
 
-    def increment_version(version)
-      major, minor, patch = version.split(?.)
+    # Increments version to next release version
+    #
+    # @example
+    #   increment_version(2.0.1, candidate: false) => 2.0.2
+    #   increment_version(2.0.1, candidate: true) => 2.0.2.rc
+    #   increment_version(2.0.1.rc, candidate: false) => 2.0.1
+    #   increment_version(2.0.1.rc, candidate: true) => 2.0.1.rc1
+    #   increment_version(2.0.1.rc1, candidate: false) => 2.0.1
+    #   increment_version(2.0.1.rc1, candidate: true) => 2.0.1.rc2
+    #   increment_version(2.0.1.rc2, candidate: false) => 2.0.1
+    #   increment_version(2.0.1.rc2, candidate: true) => 2.0.1.rc3
+    #   increment_version(2.0.1.beta1, candidate: false) => 2.0.1
+    #   increment_version(2.0.1.beta1, candidate: true) => 2.0.1.beta2
+    #   increment_version(2.0.1.beta2, candidate: false) => 2.0.1
+    #   increment_version(2.0.1.beta2, candidate: true) => 2.0.1.beta3
+    def increment_version(version, candidate: false)
+      major, minor, patch, suffix = version.split(?., 4)
       major = major.slice(1..-1) if version.start_with?(?v)
-      "#{major}.#{minor}.#{patch.to_i.next}"
+      matched = (suffix || '').match(%r{(rc|beta)([\d]*)\z})
+      # Bump patch version to next unless previous version doesn't have any candidate suffixes.
+      patch = patch.to_i.next unless matched
+      if candidate
+        suffix = matched ? "#{matched[1]}#{matched[2].to_i.next}" : 'rc'
+      else
+        suffix = nil
+      end
+      "#{major}.#{minor}.#{patch}#{".#{suffix}" if suffix && !suffix.empty?}"
     end
 
     def config
@@ -126,6 +149,9 @@ module Release
       Cannot detect the "release/patch" label in pull request ##{config.pr_no}
     EOS
 
+    # Release candidate version if the pull request has the 'release/candidate' label.
+    candidate = pull_request.labels.any? { |label| label.name == 'release/candidate' }
+
     # Abort if available tag does not exist.
     say <<-EOS unless latest_version = api.get_latest_version
       Cannot detect any tags
@@ -148,7 +174,7 @@ module Release
     end
 
     # Bump version to next version
-    next_version = increment_version(latest_version)
+    next_version = increment_version(latest_version, candidate: candidate)
     changelog = Changelog.new(config.repository, 'CHANGELOG.md', next_version, pull_requests).update!
 
     # Bump VERSION to next
@@ -162,7 +188,7 @@ end
 
 # Configure required values
 Release.configure do |cfg|
-  cfg.repository          = 'sinatra-bot/sandbox'
+  cfg.repository          = ENV['TRAVIS_REPO_SLUG']
   cfg.branch              = ENV['TRAVIS_BRANCH']
   cfg.commit_message      = ENV['TRAVIS_COMMIT_MESSAGE']
   cfg.pull_request_branch = ENV['TRAVIS_PULL_REQUEST_BRANCH']
